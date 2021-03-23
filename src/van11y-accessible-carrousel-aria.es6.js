@@ -223,12 +223,15 @@
      */
     const $listCarrousels = (node = doc) => [].slice.call(node.querySelectorAll('.' + CARROUSEL));
 
+    /** keep listeners here so that they can be refreshed */
+	var carouselListeners = [];
+    
     /**
      * Build carrousels for a container
      * @param  {Node} node
      */
-    const attach = (node, addListeners = true) => {
-
+    const attach = (node, addListeners = true, refreshListeners = false) => {
+        
         $listCarrousels(node)
             .forEach((carrouselNode) => {
 
@@ -430,13 +433,20 @@
             });
 
 
+        
+
+        if (resetListeners && carouselListeners.length > 0) {
+			carouselListeners.forEach(function(item) {
+				doc.body.removeEventListener(item.eventName, item.listenerFunc, true);
+			});
+		}
+        
         /* listeners */
         if (addListeners) {
             ['click', 'keydown']
             .forEach(eventName => {
 
-                doc.body
-                    .addEventListener(eventName, e => {
+                const listenerFunc = e => {
                         // click on control list
                         let idControlListLink = searchParent(e.target, CARROUSEL_CONTROL_LIST_LINK);
                         let idPanel = searchParent(e.target, CARROUSEL_CONTENT);
@@ -586,12 +596,10 @@
                             }*/
 
                         }
-
-
-
-                    }, true);
-
-
+                    }
+                
+                doc.body.addEventListener(eventName, listenerFunc, true);
+                carouselListeners.push({eventName, listenerFunc});
             });
 
         }
